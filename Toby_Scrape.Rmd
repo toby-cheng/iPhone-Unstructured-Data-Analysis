@@ -1,0 +1,163 @@
+---
+title: "Toby_Scrape"
+author: "Ming Ki Toby Cheng"
+date: "2/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(rvest)
+library(tidyverse)
+library(lubridate)
+```
+### Change URL
+```{r}
+## Change this URL
+baseURL <- 'https://www.bestbuy.com/site/reviews/apple-iphone-11-pro-max-256gb-space-gray-verizon/6341561?variant=A'
+```
+
+
+```{r}
+ScrapeThePage <- function(theURL){
+
+reviews <- theURL %>%
+  html_nodes(".review-item-content")
+
+heading <- reviews %>%
+  html_nodes(".review-title") %>%
+  html_text() %>%
+  as.data.frame(stringsAsFactors = F)%>%
+  rename(Heading =".")
+
+text <- reviews %>%
+  html_nodes(".pre-white-space") %>%
+  html_text() %>%
+  as.data.frame(stringsAsFactors = F)%>%
+  rename(Text =".")
+
+rating <- reviews %>%
+  html_nodes(".review-heading") %>%
+  html_text() %>%
+  as.data.frame(stringsAsFactors = F) %>%
+  rename(Rating =".") %>%
+  mutate(Rating = as.numeric(str_extract(Rating, "[[:digit:]]")))
+
+time <- reviews %>%
+    html_nodes(".submission-date") %>%
+    html_attr("title") %>%
+    mdy_hm()%>%
+  as.data.frame(stringsAsFactors = F)%>%
+  rename(Time =".") 
+
+  theReviews <- data.frame(
+    heading, text, rating, time,
+    stringsAsFactors = F)
+}
+```
+
+
+### Scraping the Data
+
+#### iPhone 11 Pro Max - Verizon
+```{r}
+## Change this URL
+baseURL <- 'https://www.bestbuy.com/site/reviews/apple-iphone-11-pro-max-256gb-space-gray-verizon/6341561?variant=A'
+
+## get number of reviews and determine number of pages 
+GetNumberReviews <- read_html(paste0(baseURL,'&page=1')) %>%
+  html_nodes(".c-total-reviews ") %>%
+  html_text() %>%
+  .[1]                  # note: there are two postPaging nodes - they are identical so we just need the first one
+
+NumberReviews <- as.numeric(str_replace_all(str_split_fixed(GetNumberReviews," ",3)[2], "[^[:alnum:]]", ""))
+ReviewPerPage <- 20
+NumberPages <- ceiling(NumberReviews/ReviewPerPage)  
+eps = NumberPages - (NumberReviews/ReviewPerPage)
+if (eps==0){NumberPages <- NumberPages}
+
+## run the scraper
+allReviews <- NULL
+
+for (thePageIndex in 1:NumberPages){
+
+  pageURL <- read_html(paste0(baseURL,'&page=',thePageIndex))
+  theReviews <- ScrapeThePage(pageURL)
+  
+  allReviews <- bind_rows(allReviews,
+                          theReviews)
+}
+
+write.csv(allReviews,'iphone11promax-verizon.csv')
+
+```
+
+#### iPhone 11 Pro Max - Sprint
+```{r}
+baseURL <- 'https://www.bestbuy.com/site/reviews/apple-iphone-11-pro-max-64gb-midnight-green-sprint/6341431?variant=A'
+
+## get number of reviews and determine number of pages 
+GetNumberReviews <- read_html(paste0(baseURL,'&page=1')) %>%
+  html_nodes(".c-total-reviews ") %>%
+  html_text() %>%
+  .[1]                  # note: there are two postPaging nodes - they are identical so we just need the first one
+
+NumberReviews <- as.numeric(str_replace_all(str_split_fixed(GetNumberReviews," ",3)[2], "[^[:alnum:]]", ""))
+ReviewPerPage <- 20
+NumberPages <- ceiling(NumberReviews/ReviewPerPage)  
+eps = NumberPages - (NumberReviews/ReviewPerPage)
+if (eps==0){NumberPages <- NumberPages}
+
+
+## run the scraper
+allReviews <- NULL
+
+for (thePageIndex in 1:NumberPages){
+
+  pageURL <- read_html(paste0(baseURL,'&page=',thePageIndex))
+  theReviews <- ScrapeThePage(pageURL)
+  
+  allReviews <- bind_rows(allReviews,
+                          theReviews)
+}
+
+write.csv(allReviews,'iphone11promax-sprint.csv')
+
+```
+
+#### iPhone 8 - Verizon
+```{r}
+baseURL <- 'https://www.bestbuy.com/site/reviews/apple-iphone-8-64gb-space-gray-verizon/6009931?variant=A'
+
+
+## get number of reviews and determine number of pages 
+GetNumberReviews <- read_html(paste0(baseURL,'&page=1')) %>%
+  html_nodes(".c-total-reviews ") %>%
+  html_text() %>%
+  .[1]                  # note: there are two postPaging nodes - they are identical so we just need the first one
+
+NumberReviews <- as.numeric(str_replace_all(str_split_fixed(GetNumberReviews," ",3)[2], "[^[:alnum:]]", ""))
+ReviewPerPage <- 20
+NumberPages <- ceiling(NumberReviews/ReviewPerPage)  
+eps = NumberPages - (NumberReviews/ReviewPerPage)
+if (eps==0){NumberPages <- NumberPages}
+
+
+## run the scraper
+allReviews <- NULL
+
+for (thePageIndex in 1:NumberPages){
+
+  pageURL <- read_html(paste0(baseURL,'&page=',thePageIndex))
+  theReviews <- ScrapeThePage(pageURL)
+  
+  allReviews <- bind_rows(allReviews,
+                          theReviews)
+}
+
+write.csv(allReviews,'iphone8-verizon.csv')
+
+```
