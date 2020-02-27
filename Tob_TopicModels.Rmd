@@ -81,7 +81,7 @@ dtmUni <- reviewsTidy %>%
 
 ```{r}
 
-numTopics <- c(10,20,30,40)
+numTopics <- c(5,7,9)
 
 
 for (theNum in c(1:length(numTopics))){
@@ -95,7 +95,7 @@ for (theNum in c(1:length(numTopics))){
 
 ```{r,fig.height=6.5,fig.width=10}
 
-theNumTopics <- 10
+theNumTopics <- 7
 theLDA <- read_rds(paste0('topicmodels/ldaiPhone8',theNumTopics,'.rds'))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -131,7 +131,7 @@ plTopicWeights8
 ```
 
 ```{r, echo=FALSE}
-theNumTopics <- 10
+theNumTopics <- 7
 theLDA <- read_rds(paste0('topicmodels/ldaiPhone8',theNumTopics,'.rds'))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -158,7 +158,7 @@ theTopicsTop %>%
   scale_x_continuous(breaks = TopicsTop$x,
                      labels = TopicsTop$term,
                      expand = c(0,0)) + 
-  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 2 seems to be about how it is easy to switch from Android to iPhone 8',
+  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 2 seems to be about Battery Life',
        x = 'word',
        y = 'beta')+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5),
@@ -190,7 +190,7 @@ theTopicsTop %>%
 ```
 
 ```{r, fig.height=4,fig.width=7, echo=FALSE}
-theTopic <- 9
+theTopic <- 6
 
 theTopicsTop <- TopicsTop %>%
   filter(topic==theTopic)
@@ -213,8 +213,8 @@ theTopicsTop %>%
 
 ```{r, fig.height=5,fig.width=9, echo=FALSE}
 
-tmpDF <- data.frame(topic = c(2,5,9), 
-                    theLabels = c('Android to Apple','Home Button','Wireless Charging'))
+tmpDF <- data.frame(topic = c(2,5,6), 
+                    theLabels = c('Battery Life','Home Button','Wireless Charging'))
 
 
 TopicsTop %>%
@@ -234,7 +234,7 @@ TopicsTop %>%
 
 ```
 
-```{r}
+```{r, fig.height=5,fig.width=9, echo=FALSE}
 
 assignments <- augment(theLDA, data = dtmUni)
 
@@ -300,7 +300,7 @@ theTopicsGamma %>%
 
 ```
 
-```{r}
+```{r,fig.height=6.5,fig.width=10}
 
 ## @knitr TopicEvolution
 
@@ -321,7 +321,7 @@ theTopicsGamma %>%
   
 ```
 
-```{r}
+```{r,fig.height=6.5,fig.width=10}
 
 ## @knitr TopicSentiments
 
@@ -351,7 +351,6 @@ reviewsTidyUni <- reviewsTidy %>%
   mutate(wordNumber = row_number())  %>%
   ungroup()
 
-plTopicWeights8
 ```
 
 ```{r}
@@ -413,7 +412,7 @@ dtmBi <- reviewsTidyUniBi %>%
   cast_dtm(X1, lemma1, n)
 
 
-numTopics <- c(10,20,30,40)
+numTopics <- c(5,7,9)
 
 
 for (theNum in c(1:length(numTopics))){
@@ -425,7 +424,7 @@ for (theNum in c(1:length(numTopics))){
 
 ## @knitr AnalyzeTopicsUniBi
 
-theNumTopics <- 10
+theNumTopics <- 7
 theLDA <- read_rds(paste0('topicmodels/ldaiPhone8_Bi',theNumTopics,'.rds'))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -541,7 +540,7 @@ dtmUni <- reviewsTidy %>%
 
 ```{r}
 
-numTopics <- c(10,20,30,40)
+numTopics <- c(7,8,9)
 
 
 for (theNum in c(1:length(numTopics))){
@@ -555,7 +554,7 @@ for (theNum in c(1:length(numTopics))){
 
 ```{r,fig.height=6.5,fig.width=10}
 
-theNumTopics <- 10
+theNumTopics <- 8
 theLDA <- read_rds(paste0('topicmodels/ldaiPhoneX',theNumTopics,'.rds'))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -591,7 +590,7 @@ plTopicWeightsX
 ```
 
 ```{r, echo=FALSE}
-theNumTopics <- 10
+theNumTopics <- 8
 theLDA <- read_rds(paste0('topicmodels/ldaiPhoneX',theNumTopics,'.rds'))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -606,7 +605,7 @@ TopicsTop <- theTopicsBeta %>%
 ```
 
 ```{r, fig.height=4,fig.width=7, echo=FALSE}
-theTopic <- 2
+theTopic <- 1
 
 theTopicsTop <- TopicsTop %>%
   filter(topic==theTopic)
@@ -618,7 +617,29 @@ theTopicsTop %>%
   scale_x_continuous(breaks = TopicsTop$x,
                      labels = TopicsTop$term,
                      expand = c(0,0)) + 
-  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 2 seems to be about how it is easy to switch from Android to iPhone X',
+  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 1 seems to be about the improved camera',
+       x = 'word',
+       y = 'beta')+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5),
+        axis.text.y = element_text(size = 8))
+  
+
+```
+
+```{r, fig.height=4,fig.width=7, echo=FALSE}
+theTopic <- 4
+
+theTopicsTop <- TopicsTop %>%
+  filter(topic==theTopic)
+
+theTopicsTop %>%
+  ggplot(aes(x=x,y=beta)) + 
+  geom_bar(stat='identity',show.legend = F) + 
+  coord_flip() + 
+  scale_x_continuous(breaks = TopicsTop$x,
+                     labels = TopicsTop$term,
+                     expand = c(0,0)) + 
+  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 4 seems to be about the new facial recognition feature of the iPhone X',
        x = 'word',
        y = 'beta')+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5),
@@ -640,29 +661,7 @@ theTopicsTop %>%
   scale_x_continuous(breaks = TopicsTop$x,
                      labels = TopicsTop$term,
                      expand = c(0,0)) + 
-  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 5 seems to be about the Home Button Retention of the iPhone X',
-       x = 'word',
-       y = 'beta')+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5),
-        axis.text.y = element_text(size = 8))
-  
-
-```
-
-```{r, fig.height=4,fig.width=7, echo=FALSE}
-theTopic <- 9
-
-theTopicsTop <- TopicsTop %>%
-  filter(topic==theTopic)
-
-theTopicsTop %>%
-  ggplot(aes(x=x,y=beta)) + 
-  geom_bar(stat='identity',show.legend = F) + 
-  coord_flip() + 
-  scale_x_continuous(breaks = TopicsTop$x,
-                     labels = TopicsTop$term,
-                     expand = c(0,0)) + 
-  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 9 seems to be about the Wireless Charging capabilities of the iPhone X',
+  labs(title=paste0('Top Words in Topic ',theTopic, ' Word Distribution'),  caption = 'Topic 5 seems to be about the lost feature of the home button on the iPhone X',
        x = 'word',
        y = 'beta')+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5),
@@ -673,8 +672,8 @@ theTopicsTop %>%
 
 ```{r, fig.height=5,fig.width=9, echo=FALSE}
 
-tmpDF <- data.frame(topic = c(2,5,9), 
-                    theLabels = c('Android to Apple','Home Button','Wireless Charging'))
+tmpDF <- data.frame(topic = c(1,4,5), 
+                    theLabels = c('Improved Camera','Face Id','Home Button'))
 
 
 TopicsTop %>%
@@ -694,11 +693,11 @@ TopicsTop %>%
 
 ```
 
-```{r}
+```{r, fig.height=5,fig.width=9, echo=FALSE}
 
 assignments <- augment(theLDA, data = dtmUni)
 
-theDocID <- '23'
+theDocID <- '5090'
 theDoc <- assignments %>%
   filter(document == theDocID)
 
@@ -814,7 +813,7 @@ reviewsTidyUni <- reviewsTidy %>%
 plTopicWeightsX
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 ## all reviews 
 tmpUni <-  reviewsTidyUni %>%
@@ -873,7 +872,7 @@ dtmBi <- reviewsTidyUniBi %>%
   cast_dtm(X1, lemma1, n)
 
 
-numTopics <- c(10,20,30,40)
+numTopics <- c(7,8,9)
 
 
 for (theNum in c(1:length(numTopics))){
@@ -885,7 +884,7 @@ for (theNum in c(1:length(numTopics))){
 
 ## @knitr AnalyzeTopicsUniBi
 
-theNumTopics <- 10
+theNumTopics <- 8
 theLDA <- read_rds(paste0('topicmodels/ldaiPhoneX_Bi',theNumTopics,'.rds'))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -917,7 +916,7 @@ plTopicWeightsX_2 <- TopicsTop %>%
 
 ```
 
-```{r,fig.height=6.5,fig.width=10}
+```{r,fig.height=6.5,fig.width=10 eval=FALSE, fig.width=10, include=FALSE, r,fig.height=6.5}
 
 plTopicWeightsX_2
 ```

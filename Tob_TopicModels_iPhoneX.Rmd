@@ -1,0 +1,400 @@
+---
+title: "Tob_TopicModels"
+author: "Ming Ki Toby Cheng"
+date: "2/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(topicmodels)
+library(tidytext)
+library(SnowballC)
+install.packages("LDAvis")
+install.packages("textstem")
+library(LDAvis)
+library(textstem)
+library(scales)
+library(lubridate)
+```
+
+```{r}
+alldata <- read_csv("alldata.csv")
+iphoneX <- filter(alldata, Type == "iphoneX")
+```
+
+## iPhone X
+```{r}
+## get text into tidy format, replace a few special words and remove stop words
+reviewsTidy <- iphoneX %>%
+  select(X1, Text) %>%
+  unnest_tokens(word, Text) %>%
+  anti_join(stop_words)
+
+## get raw word frequencies
+
+wordCount <- reviewsTidy %>%
+  count(word, sort = TRUE)
+
+## remove common words and lemmatize remaining
+commonWords <- c("iphone", "phone", "apple", "iPhone")
+
+reviewsTidy <- reviewsTidy %>%
+  mutate(lemma = lemmatize_words(word))
+
+wordCount <- reviewsTidy %>%
+  count(lemma, sort = TRUE)
+
+## remove infrequent words
+freqLimit <- 20
+vocab <- wordCount %>%
+  filter(n >= freqLimit)
+
+reviewsTidy <- reviewsTidy %>%
+  filter(lemma %in% vocab$lemma) %>%
+  filter(!lemma %in% commonWords)
+
+
+## remove very short reviews
+
+reviewLength <- reviewsTidy %>%
+  count(X1)
+
+minLength <- 5
+
+reviewLength <- reviewLength %>%
+  filter(n >= minLength)
+
+## create document term matrix for use in LDA
+
+dtmUni <- reviewsTidy %>%
+  filter(X1 %in% reviewLength$X1) %>%
+  count(X1, lemma) %>%
+  cast_dtm(X1, lemma, n)
+```
+
+```{r}
+
+numTopics <- c(7, 8, 9)
+
+
+for (theNum in c(1:length(numTopics))) {
+  theLDA <- LDA(dtmUni,
+    k = numTopics[theNum], method = "Gibbs",
+    control = list(alpha = 1 / numTopics[theNum], iter = 5000, burnin = 10000, seed = 1234)
+  )
+
+  saveRDS(theLDA, file = paste0("topicmodels/ldaiPhoneX", numTopics[theNum], ".rds"))
+}
+```
+
+```{r,fig.height=6.5,fig.width=10}
+
+theNumTopics <- 8
+theLDA <- read_rds(paste0("topicmodels/ldaiPhoneX", theNumTopics, ".rds"))
+
+theTopicsBeta <- tidy(theLDA, matrix = "beta")
+
+TopicsTop <- theTopicsBeta %>%
+  group_by(topic) %>%
+  top_n(15, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ungroup() %>%
+  mutate(x = n():1) # for plotting
+
+plTopicWeightsX <- TopicsTop %>%
+  mutate(topic = factor(topic)) %>%
+  ggplot(aes(x = x, y = beta, fill = topic)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  coord_flip() +
+  facet_wrap(~topic, scales = "free") +
+  scale_x_continuous(
+    breaks = TopicsTop$x,
+    labels = TopicsTop$term,
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = "Top Words by Topic",
+    subtitle = paste0(
+      theNumTopics, " Topic LDA of ",
+      prettyNum(nrow(reviewLength), big.mark = ",", scientific = FALSE), " iPhone X Reviews"
+    ),
+    caption = 'Note: The words "iPhone", "Apple" and "Phone" and reviews less than 5 words long have been removed.',
+    x = "word",
+    y = "beta"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+    axis.text.y = element_text(size = 6)
+  )
+
+plTopicWeightsX
+```
+
+```{r, echo=FALSE}
+theNumTopics <- 8
+theLDA <- read_rds(paste0("topicmodels/ldaiPhoneX", theNumTopics, ".rds"))
+
+theTopicsBeta <- tidy(theLDA, matrix = "beta")
+
+TopicsTop <- theTopicsBeta %>%
+  group_by(topic) %>%
+  top_n(25, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  ungroup() %>%
+  mutate(x = n():1) # for plotting
+```
+
+```{r, fig.height=4,fig.width=7, echo=FALSE}
+theTopic <- 1
+
+theTopicsTop <- TopicsTop %>%
+  filter(topic == theTopic)
+
+theTopicsTop %>%
+  ggplot(aes(x = x, y = beta)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  coord_flip() +
+  scale_x_continuous(
+    breaks = TopicsTop$x,
+    labels = TopicsTop$term,
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 1 seems to be about the improved camera",
+    x = "word",
+    y = "beta"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+    axis.text.y = element_text(size = 8)
+  )
+```
+
+```{r, fig.height=4,fig.width=7, echo=FALSE}
+theTopic <- 4
+
+theTopicsTop <- TopicsTop %>%
+  filter(topic == theTopic)
+
+theTopicsTop %>%
+  ggplot(aes(x = x, y = beta)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  coord_flip() +
+  scale_x_continuous(
+    breaks = TopicsTop$x,
+    labels = TopicsTop$term,
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 4 seems to be about the new facial recognition feature of the iPhone X",
+    x = "word",
+    y = "beta"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+    axis.text.y = element_text(size = 8)
+  )
+```
+
+```{r, fig.height=4,fig.width=7, echo=FALSE}
+theTopic <- 5
+
+theTopicsTop <- TopicsTop %>%
+  filter(topic == theTopic)
+
+theTopicsTop %>%
+  ggplot(aes(x = x, y = beta)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  coord_flip() +
+  scale_x_continuous(
+    breaks = TopicsTop$x,
+    labels = TopicsTop$term,
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 5 seems to be about the lost feature of the home button on the iPhone X",
+    x = "word",
+    y = "beta"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+    axis.text.y = element_text(size = 8)
+  )
+```
+
+```{r, fig.height=5,fig.width=9, echo=FALSE}
+
+tmpDF <- data.frame(
+  topic = c(1, 4, 5),
+  theLabels = c("Improved Camera", "Face Id", "Home Button")
+)
+
+
+TopicsTop %>%
+  inner_join(tmpDF, by = "topic") %>%
+  ggplot(aes(x = x, y = beta, fill = theLabels)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  coord_flip() +
+  facet_wrap(~theLabels, scales = "free") +
+  scale_x_continuous(
+    breaks = TopicsTop$x,
+    labels = TopicsTop$term,
+    expand = c(0, 0)
+  ) +
+  labs(
+    title = "3 Topics with Labels",
+    x = "word",
+    y = "beta"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+    axis.text.y = element_text(size = 9)
+  )
+```
+
+```{r, fig.height=5,fig.width=9, echo=FALSE}
+
+assignments <- augment(theLDA, data = dtmUni)
+
+theDocID <- "5090"
+theDoc <- assignments %>%
+  filter(document == theDocID)
+
+
+tmp <- reviewsTidy %>%
+  filter(X1 == theDocID) %>%
+  left_join(select(theDoc, term, .topic), by = c("lemma" = "term")) %>%
+  distinct()
+
+
+
+theOrg <- iphoneX %>%
+  filter(X1 == theDocID) %>%
+  select(X1, Text) %>%
+  unnest_tokens(word, Text) %>%
+  left_join(select(tmp, word, .topic), by = "word") %>%
+  mutate(wordID = row_number())
+
+theBreaks <- c(1:10)
+theY <- c(100:1)
+dfIndex <- data.frame(
+  y = rep(theY, each = length(theBreaks)),
+  x = rep(theBreaks, length(theY))
+) %>%
+  mutate(wordID = row_number())
+
+
+theOrg %>%
+  left_join(dfIndex, by = "wordID") %>%
+  ggplot(aes(x = factor(x), y = y, label = word, color = factor(.topic))) +
+  geom_text() +
+  theme_bw() +
+  labs(x = "", y = "", title = paste0("ReviewID ", theDocID)) +
+  scale_color_discrete(name = "Topic") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_blank()
+  )
+```
+
+```{r,fig.height=6.5,fig.width=10}
+## @knitr ReviewClustering
+
+theTopicsGamma <- tidy(theLDA, matrix = "gamma")
+
+theSampleReviews <- reviewLength %>%
+  sample_n(5)
+
+theTopicsGamma %>%
+  filter(document %in% theSampleReviews$X1) %>%
+  ggplot(aes(x = topic, y = gamma, fill = document)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~document, ncol = 1) +
+  theme(legend.position = "none") +
+  scale_y_continuous(labels = percent) +
+  labs(
+    title = "5 Random Reviews",
+    y = "Topic Weight (Gamma)"
+  )
+```
+
+```{r,fig.height=6.5,fig.width=10}
+
+## @knitr TopicEvolution
+
+iphoneX <- iphoneX %>%
+  mutate(ID = as.character(X1))
+
+theTopicsGamma <- tidy(theLDA, matrix = "gamma") %>%
+  inner_join(iphoneX, by = c("document" = "ID"))
+
+theTopicsGamma %>%
+  group_by(topic, Year = year(Time)) %>%
+  summarize(mean = mean(gamma)) %>%
+  ggplot(aes(x = Year, y = mean, group = topic)) + geom_line() +
+  facet_wrap(~topic, labeller = label_both) +
+  scale_y_continuous(labels = percent) +
+  labs(title = "Topic Evolution", x = "Year of Review", y = "Average Topic Weight") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r,fig.height=6.5,fig.width=10}
+
+## @knitr TopicSentiments
+
+theTopicsGamma <- tidy(theLDA, matrix = "gamma") %>%
+  inner_join(iphoneX, by = c("document" = "ID"))
+
+theTopicsGamma %>%
+  group_by(Rating, topic) %>%
+  summarize(mean = mean(gamma)) %>%
+  mutate(topic = factor(topic)) %>%
+  ggplot(aes(x = Rating, y = mean, fill = topic)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~topic, scales = "free", labeller = label_both) +
+  scale_y_continuous(labels = percent) +
+  theme(legend.position = "none") +
+  labs(title = "Topic Weights by Star Rating", x = "Rating", y = "Average Topic Weight")
+```
+
+
+```{r}
+reviewsTidyUni <- reviewsTidy %>%
+  group_by(X1) %>%
+  mutate(wordNumber = row_number()) %>%
+  ungroup()
+
+vocab <- reviewsTidyUni %>%
+  count(lemma, sort = T) %>%
+  filter(n >= 20)
+
+theTopicsBetaW <- select(spread(tidy(theLDA, matrix = "beta"), term, beta), -topic)
+theTopicsGammaW <- select(spread(tidy(theLDA, matrix = "gamma"), topic, gamma), -document)
+theTerms <- colnames(theTopicsBetaW)
+
+theVocab <- vocab %>%
+  mutate(word = factor(lemma, levels = theTerms)) %>%
+  arrange(word) %>%
+  mutate(word = as.character(word))
+
+json <- createJSON(
+  phi = theTopicsBetaW,
+  theta = theTopicsGammaW,
+  doc.length = reviewLength$n,
+  vocab = theTerms,
+  R = theNumTopics,
+  term.frequency = theVocab$n
+)
+
+serVis(json)
+```
+
