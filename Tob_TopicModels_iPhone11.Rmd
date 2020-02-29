@@ -41,7 +41,7 @@ wordCount <- reviewsTidy %>%
   count(word, sort = TRUE)
 
 ## remove common words and lemmatize remaining
-commonWords <- c("iphone", "phone", "apple", "iPhone", "camera")
+commonWords <- c("iphone", "phone", "apple", "iPhone", "11", "camera")
 
 reviewsTidy <- reviewsTidy %>%
   mutate(lemma = lemmatize_words(word))
@@ -94,7 +94,7 @@ for (theNum in c(1:length(numTopics))) {
 
 ```{r,fig.height=6.5,fig.width=10}
 
-theNumTopics <- 5
+theNumTopics <- 7
 theLDA <- read_rds(paste0("topicmodels/ldaiPhone11", theNumTopics, ".rds"))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -137,7 +137,7 @@ plTopicWeights11
 ```
 
 ```{r, echo=FALSE}
-theNumTopics <- 5
+theNumTopics <- 7
 theLDA <- read_rds(paste0("topicmodels/ldaiPhone11", theNumTopics, ".rds"))
 
 theTopicsBeta <- tidy(theLDA, matrix = "beta")
@@ -167,7 +167,7 @@ theTopicsTop %>%
     expand = c(0, 0)
   ) +
   labs(
-    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 1 seems to be about iPhone 11 Battery Life",
+    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 1 seems to be about Home Button",
     x = "word",
     y = "beta"
   ) +
@@ -193,7 +193,7 @@ theTopicsTop %>%
     expand = c(0, 0)
   ) +
   labs(
-    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 3 seems to be about upgrading to the iPhone 11",
+    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 3 seems to be about switching from Android to iPhone 11",
     x = "word",
     y = "beta"
   ) +
@@ -204,7 +204,7 @@ theTopicsTop %>%
 ```
 
 ```{r, fig.height=4,fig.width=7, echo=FALSE}
-theTopic <- 5
+theTopic <- 7
 
 theTopicsTop <- TopicsTop %>%
   filter(topic == theTopic)
@@ -219,7 +219,7 @@ theTopicsTop %>%
     expand = c(0, 0)
   ) +
   labs(
-    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 5 seems to be about switching from Android iPhone 11",
+    title = paste0("Top Words in Topic ", theTopic, " Word Distribution"), caption = "Topic 5 seems to be about iPhone 11 battery life",
     x = "word",
     y = "beta"
   ) +
@@ -232,8 +232,8 @@ theTopicsTop %>%
 ```{r, fig.height=5,fig.width=9, echo=FALSE}
 
 tmpDF <- data.frame(
-  topic = c(1, 3, 5),
-  theLabels = c("Battery Life", "Upgrading Phone", "Android to iPhone 11")
+  topic = c(1, 3, 7),
+  theLabels = c("Home Button", "Android to iPhone 11", "Battery Life")
 )
 
 
@@ -259,11 +259,11 @@ TopicsTop %>%
   )
 ```
 
-```{r}
+```{r, fig.height=5,fig.width=9, echo=FALSE}
 
 assignments <- augment(theLDA, data = dtmUni)
 
-theDocID <- "8862"
+theDocID <- "9584"
 theDoc <- assignments %>%
   filter(document == theDocID)
 
