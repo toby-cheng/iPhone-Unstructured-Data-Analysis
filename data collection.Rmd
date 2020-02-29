@@ -108,11 +108,21 @@ write.csv(iphone11promax, "iphone11promax.csv")
 iphone8_verizon <- read_csv("iphone8-verizon.csv")
 iphoneX <- read_csv("iphoneX.csv")
 
+iphone8_verizon <- read_csv("iphone8-verizon.csv")
+iphoneX <- read_csv("iphoneX.csv")
+
+iphone11_verizon <- read_csv("iphone11-verizon.csv")
+iphone11_sprint <- read_csv("iphone11-sprint.csv")
+iphone11_att <- read_csv("iphone11-at&t.csv")
+iphone11 <- rbind(iphone11_verizon,iphone11_sprint,iphone11_att)
+write.csv(iphone11, "iphone11.csv")
+
 # combine all data
 iphoneX$Type <- c("iphoneX") 
 iphone8_verizon$Type <- c("iphone8")
 iphone11promax$Type <- c("iphone11promax")
+iphone11$Type <- c("iphone11")
 
-iphonedata <- rbind(iphone8_verizon,iphone11promax,iphoneX)
+iphonedata <- rbind(iphone8_verizon,iphone11promax,iphoneX, iphone11)
 write.csv(iphonedata,"alldata.csv")
 ```
