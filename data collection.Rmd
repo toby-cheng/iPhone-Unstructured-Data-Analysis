@@ -1,0 +1,118 @@
+---
+title: "Data Collection"
+output: html_notebook
+---
+
+```{r}
+library(rvest)
+library(tidyverse)
+library(lubridate)
+```
+
+### Change URL
+```{r}
+## Change this URL
+baseURL <- 'https://www.bestbuy.com/site/reviews/apple-iphone-11-pro-max-256gb-gold-at-t/6341325?variant=A'
+```
+
+
+```{r}
+ScrapeThePage <- function(theURL){
+
+reviews <- theURL %>%
+  html_nodes(".review-item-content")
+
+heading <- reviews %>%
+  html_nodes(".review-title") %>%
+  html_text() %>%
+  as.data.frame(stringsAsFactors = F)%>%
+  rename(Heading =".")
+
+text <- reviews %>%
+  html_nodes(".pre-white-space") %>%
+  html_text() %>%
+  as.data.frame(stringsAsFactors = F)%>%
+  rename(Text =".")
+
+rating <- reviews %>%
+  html_nodes(".review-heading") %>%
+  html_text() %>%
+  as.data.frame(stringsAsFactors = F) %>%
+  rename(Rating =".") %>%
+  mutate(Rating = as.numeric(str_extract(Rating, "[[:digit:]]")))
+
+time <- reviews %>%
+    html_nodes(".submission-date") %>%
+    html_attr("title") %>%
+    mdy_hm()%>%
+  as.data.frame(stringsAsFactors = F)%>%
+  rename(Time =".") 
+
+  theReviews <- data.frame(
+    heading, text, rating, time,
+    stringsAsFactors = F)
+}
+```
+
+
+```{r}
+## get number of reviews and determine number of pages 
+GetNumberReviews <- read_html(paste0(baseURL,'&page=1')) %>%
+  html_nodes(".c-total-reviews ") %>%
+  html_text() %>%
+  .[1]                  # note: there are two postPaging nodes - they are identical so we just need the first one
+
+NumberReviews <- as.numeric(str_replace_all(str_split_fixed(GetNumberReviews," ",3)[2], "[^[:alnum:]]", ""))
+ReviewPerPage <- 20
+NumberPages <- ceiling(NumberReviews/ReviewPerPage)  
+eps = NumberPages - (NumberReviews/ReviewPerPage)
+if (eps==0){NumberPages <- NumberPages}
+
+```
+
+### Scraping the Data
+```{r}
+
+## run the scraper
+allReviews <- NULL
+
+for (thePageIndex in 1:NumberPages){
+
+  pageURL <- read_html(paste0(baseURL,'&page=',thePageIndex))
+  theReviews <- ScrapeThePage(pageURL)
+  
+  allReviews <- bind_rows(allReviews,
+                          theReviews)
+}
+```
+
+### Writing data to csv
+
+```{r}
+# change the file name
+write.csv(allReviews, "iphone11promax-Gold.csv")
+```
+
+### combine all data
+```{r}
+library(tidyverse)
+library(readr)
+# read data
+iphone11promax_verizon <- read_csv("iphone11promax-verizon.csv")
+iphone11promax_sprint <- read_csv("iphone11promax-sprint.csv")
+iphone11promax_Gold <- read_csv("iphone11promax-Gold.csv")
+
+iphone11promax <- rbind(iphone11promax_Gold,iphone11promax_sprint,iphone11promax_verizon)
+write.csv(iphone11promax, "iphone11promax.csv")
+
+iphone8_verizon <- read_csv("iphone8-verizon.csv")
+iphoneX <- read_csv("iphoneX.csv")
+
+# combine all data
+iphoneX$Type <- c("iphoneX") 
+iphone8_verizon$Type <- c("iphone8")
+iphone11promax$Type <- c("iphone11promax")
+
+iphonedata <- rbind(iphone8_verizon,iphone11promax,iphoneX)
+write.csv(iphonedata,"alldata.csv")
+```
