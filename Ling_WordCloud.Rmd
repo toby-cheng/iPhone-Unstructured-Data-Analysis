@@ -1,0 +1,95 @@
+---
+title: "WordCloud"
+author: "Ling"
+date: "3/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidytext)
+library(SnowballC)
+library(scales)
+library(lubridate)
+library(wordcloud)
+```
+
+```{r}
+alldata <- read_csv("alldata.csv")
+```
+
+```{r}
+iphone8 <- filter(alldata, Type == "iphone8")
+
+iphone8Tidy <- iphone8 %>%
+  select(X1, Text) %>%
+  unnest_tokens(word,Text) %>%
+  anti_join(stop_words)
+
+commonWords <- c("iphone", "phone", "apple", "iPhone", "8", "5", "6", "phones", "6s", "7")
+
+iphone8FreqWords <- iphone8Tidy %>%
+  filter(!word %in% commonWords) %>%
+  count(word) 
+
+topWords8 <- iphone8FreqWords %>%
+  top_n(100) %>%
+  arrange(desc(n))
+
+wordcloud(topWords8$word,
+           topWords8$n,
+           scale=c(5,0.5), 
+           colors=brewer.pal(8,"Dark2"))
+```
+
+
+```{r}
+iphoneX <- filter(alldata, Type == "iphoneX")
+
+iphoneXTidy <- iphoneX %>%
+  select(X1, Text) %>%
+  unnest_tokens(word,Text) %>%
+  anti_join(stop_words)
+
+commonWords <- c("iphone", "phone", "apple", "iPhone", "phones", "7", "6")
+
+iphoneXFreqWords <- iphoneXTidy %>%
+  filter(!word %in% commonWords) %>%
+  count(word) 
+
+topWordsX <- iphoneXFreqWords %>%
+  top_n(100) %>%
+  arrange(desc(n))
+
+wordcloud(topWordsX$word,
+           topWordsX$n,
+           scale=c(5,0.5), 
+           colors=brewer.pal(8,"Dark2"))
+```
+
+
+```{r}
+iphone11pm <- filter(alldata, Type == "iphone11promax")
+
+iphone11Tidy <- iphone11pm %>%
+  select(X1, Text) %>%
+  unnest_tokens(word,Text) %>%
+  anti_join(stop_words)
+
+commonWords <- c("iphone", "phone", "apple", "iPhone", "phones", "11", "7", "8")
+
+iphone11FreqWords <- iphone11Tidy %>%
+  filter(!word %in% commonWords) %>%
+  count(word) 
+
+topWords11 <- iphone11FreqWords %>%
+  top_n(100) %>%
+  arrange(desc(n))
+
+wordcloud(topWords11$word,
+           topWords11$n,
+           scale=c(5,0.5), 
+           colors=brewer.pal(8,"Dark2"))
+```
