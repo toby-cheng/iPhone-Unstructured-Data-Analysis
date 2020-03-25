@@ -8,3 +8,5 @@ Assessed the sentiment of reviews and relationship to their ratings using TidyTe
 Identified top overall keywords as well as in negative reviews using Part-Of-Speech tagging and word networks
 
 Tuned LDA Topic Models for each iPhone model to draw insights about key topics for customers by analyzing their sentiment as well as popularity over time.
+
+Final findings/insights/recommendations summarized in "iPhone-Unstructured-Data-Analysis". PPT and PDF versions available.
